@@ -489,3 +489,484 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 });
+
+/* =========================================================
+   GALLERY LIGHTBOX
+   Click image → open
+   ESC → close
+   Click outside → close
+   Arrow keys → previous / next
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const galleryCards = document.querySelectorAll(".gallery-card");
+    const lightbox = document.querySelector(".lightbox");
+
+    if (!galleryCards.length || !lightbox) {
+        return;
+    }
+
+    const lightboxImage = lightbox.querySelector(
+        ".lightbox-content img"
+    );
+
+    const closeButton = lightbox.querySelector(
+        ".lightbox-close"
+    );
+
+    const previousButton = lightbox.querySelector(
+        ".lightbox-prev"
+    );
+
+    const nextButton = lightbox.querySelector(
+        ".lightbox-next"
+    );
+
+    const caption = lightbox.querySelector(
+        ".lightbox-caption"
+    );
+
+
+    let currentIndex = 0;
+
+
+    /* =====================================================
+       COLLECT GALLERY IMAGES
+    ===================================================== */
+
+    const images = [];
+
+    galleryCards.forEach(function (card, index) {
+
+        const image = card.querySelector("img");
+
+        if (!image) {
+            return;
+        }
+
+        images.push({
+            src: image.src,
+            alt: image.alt || "Vijaya Odisha Gallery Image",
+            card: card
+        });
+
+
+        /* Make entire card clickable */
+
+        card.addEventListener("click", function (event) {
+
+            event.preventDefault();
+
+            currentIndex = index;
+
+            openLightbox(currentIndex);
+
+        });
+
+    });
+
+
+
+    /* =====================================================
+       OPEN LIGHTBOX
+    ===================================================== */
+
+    function openLightbox(index) {
+
+        if (!images[index]) {
+            return;
+        }
+
+        currentIndex = index;
+
+        const imageData = images[currentIndex];
+
+
+        /* Change large image */
+
+        lightboxImage.src = imageData.src;
+
+        lightboxImage.alt = imageData.alt;
+
+
+        /* Caption */
+
+        if (caption) {
+
+            const smallText = caption.querySelector(
+                "span:first-child"
+            );
+
+            const mainText = caption.querySelector(
+                "span:last-child"
+            );
+
+            if (smallText) {
+                smallText.textContent =
+                    "VIJAYA ODISHA";
+            }
+
+            if (mainText) {
+                mainText.textContent =
+                    imageData.alt;
+            }
+        }
+
+
+        /* Show lightbox */
+
+        lightbox.classList.add("show");
+
+
+        /* Prevent page scrolling */
+
+        document.body.style.overflow = "hidden";
+
+
+        /* Accessibility */
+
+        lightbox.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+    }
+
+
+
+    /* =====================================================
+       CLOSE LIGHTBOX
+    ===================================================== */
+
+    function closeLightbox() {
+
+        lightbox.classList.remove("show");
+
+
+        document.body.style.overflow = "";
+
+
+        lightbox.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        /*
+         * Remove image after closing.
+         * This prevents old images from flashing
+         * when another image is opened.
+         */
+
+        setTimeout(function () {
+
+            if (!lightbox.classList.contains("show")) {
+
+                lightboxImage.removeAttribute("src");
+
+            }
+
+        }, 300);
+
+    }
+
+
+
+    /* =====================================================
+       NEXT IMAGE
+    ===================================================== */
+
+    function showNext() {
+
+        currentIndex++;
+
+        if (currentIndex >= images.length) {
+            currentIndex = 0;
+        }
+
+        updateLightboxImage();
+
+    }
+
+
+
+    /* =====================================================
+       PREVIOUS IMAGE
+    ===================================================== */
+
+    function showPrevious() {
+
+        currentIndex--;
+
+        if (currentIndex < 0) {
+            currentIndex = images.length - 1;
+        }
+
+        updateLightboxImage();
+
+    }
+
+
+
+    /* =====================================================
+       UPDATE IMAGE
+    ===================================================== */
+
+    function updateLightboxImage() {
+
+        const imageData = images[currentIndex];
+
+        if (!imageData) {
+            return;
+        }
+
+
+        lightboxImage.style.opacity = "0";
+
+
+        setTimeout(function () {
+
+            lightboxImage.src = imageData.src;
+
+            lightboxImage.alt = imageData.alt;
+
+            lightboxImage.onload = function () {
+
+                lightboxImage.style.opacity = "1";
+
+            };
+
+
+            if (caption) {
+
+                const smallText = caption.querySelector(
+                    "span:first-child"
+                );
+
+                const mainText = caption.querySelector(
+                    "span:last-child"
+                );
+
+                if (smallText) {
+                    smallText.textContent =
+                        "VIJAYA ODISHA";
+                }
+
+                if (mainText) {
+                    mainText.textContent =
+                        imageData.alt;
+                }
+
+            }
+
+        }, 120);
+
+    }
+
+
+
+    /* =====================================================
+       CLOSE BUTTON
+    ===================================================== */
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+                closeLightbox();
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
+       NEXT BUTTON
+    ===================================================== */
+
+    if (nextButton) {
+
+        nextButton.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+                showNext();
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
+       PREVIOUS BUTTON
+    ===================================================== */
+
+    if (previousButton) {
+
+        previousButton.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+                showPrevious();
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
+       CLICK OUTSIDE IMAGE → CLOSE
+    ===================================================== */
+
+    lightbox.addEventListener(
+        "click",
+        function (event) {
+
+            /*
+             * Only close if the user clicked
+             * the dark background itself.
+             */
+
+            if (event.target === lightbox) {
+
+                closeLightbox();
+
+            }
+
+        }
+    );
+
+
+
+    /* =====================================================
+       PREVENT IMAGE CLICK FROM CLOSING
+    ===================================================== */
+
+    if (lightboxImage) {
+
+        lightboxImage.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
+       ESC + ARROW KEYS
+    ===================================================== */
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            /*
+             * Do nothing when lightbox isn't open.
+             */
+
+            if (!lightbox.classList.contains("show")) {
+                return;
+            }
+
+
+            /* ESC */
+
+            if (event.key === "Escape") {
+
+                event.preventDefault();
+
+                closeLightbox();
+
+                return;
+
+            }
+
+
+            /* RIGHT ARROW */
+
+            if (event.key === "ArrowRight") {
+
+                event.preventDefault();
+
+                showNext();
+
+                return;
+
+            }
+
+
+            /* LEFT ARROW */
+
+            if (event.key === "ArrowLeft") {
+
+                event.preventDefault();
+
+                showPrevious();
+
+            }
+
+        }
+    );
+
+});
+
+/* =========================================
+   TOP BAR PAGE-SPECIFIC LINKS
+========================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const currentPage =
+        window.location.pathname.split("/").pop() || "index.html";
+
+    const topbarRight =
+        document.querySelector(".topbar-right");
+
+    if (!topbarRight) {
+        return;
+    }
+
+
+    /* Remove Contact from top bar on ALL pages */
+
+    topbarRight
+        .querySelectorAll('a[href="contact.html"]')
+        .forEach(function (link) {
+            link.remove();
+        });
+
+
+    /* Remove Login from top bar on ALL pages
+       EXCEPT Home */
+
+    if (currentPage !== "index.html") {
+
+        topbarRight
+            .querySelectorAll('a[href="login.html"], a[href="login"]')
+            .forEach(function (link) {
+                link.remove();
+            });
+
+    }
+
+});
